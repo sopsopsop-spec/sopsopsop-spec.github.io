@@ -393,4 +393,6 @@
   });
 
   render();
+
+  window.openUniversityDetail = openModal;
 })();

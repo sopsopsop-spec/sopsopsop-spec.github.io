@@ -21,6 +21,13 @@
     </div>
   </header>
 
+  <section class="globe-hero">
+    <div id="globeContainer" class="globe-container">
+      <canvas id="globeCanvas"></canvas>
+      <p id="globeHint" class="globe-hint">지구본을 불러오는 중...</p>
+    </div>
+  </section>
+
   <main class="layout">
     <aside class="filters">
       <div class="filter-group">
@@ -92,7 +99,11 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="data.js"></script>
+  <script src="city-coords.js"></script>
   <script src="app.js"></script>
+  <script src="globe.js"></script>
 </body>
 </html>
