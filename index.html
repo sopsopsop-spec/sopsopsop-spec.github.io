@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>교환학생 파견대학 리스트</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div>
+        <h1>교환학생 파견대학 리스트</h1>
+        <p class="subtitle">Exchange Program Partner Universities</p>
+      </div>
+      <button id="openMyList" class="mylist-btn">
+        <span class="mylist-star">★</span>
+        내 리스트
+        <span id="myListCount" class="mylist-count">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="filters">
+      <div class="filter-group">
+        <label for="search">검색 (학교명 / 도시)</label>
+        <input type="text" id="search" placeholder="e.g. Concordia, Montreal...">
+      </div>
+
+      <div class="filter-group">
+        <label for="continent">대륙</label>
+        <select id="continent">
+          <option value="">전체</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="country">국가</label>
+        <select id="country">
+          <option value="">전체</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="level">과정</label>
+        <select id="level">
+          <option value="">전체</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="toefl">MyBestScore 인정 여부</label>
+        <select id="toefl">
+          <option value="">전체</option>
+        </select>
+      </div>
+
+      <div class="filter-group checkbox-group">
+        <label><input type="checkbox" id="noMajorRestriction"> 전공제한 없음만 보기</label>
+      </div>
+
+      <button id="resetFilters" class="reset-btn">필터 초기화</button>
+
+      <div class="result-count" id="resultCount"></div>
+    </aside>
+
+    <section class="results">
+      <div id="cardGrid" class="card-grid"></div>
+      <p id="emptyState" class="empty-state" hidden>조건에 맞는 대학이 없습니다.</p>
+    </section>
+  </main>
+
+  <div id="modalOverlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <button id="modalClose" class="modal-close" aria-label="Close">&times;</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <div id="myListOverlay" class="modal-overlay" hidden>
+    <div class="modal mylist-modal" role="dialog" aria-modal="true">
+      <button id="myListClose" class="modal-close" aria-label="Close">&times;</button>
+      <h2>내 리스트</h2>
+      <p class="mylist-hint">드래그하거나 ▲▼ 버튼으로 지원 순서를 바꿀 수 있어요.</p>
+      <ol id="myListItems" class="mylist-items"></ol>
+      <p id="myListEmpty" class="empty-state" hidden>아직 추가한 대학이 없습니다.<br>카드 오른쪽 위 ☆ 버튼을 눌러 리스트에 추가해보세요.</p>
+      <div class="mylist-actions">
+        <button id="myListCopy" class="reset-btn">순서대로 복사</button>
+        <button id="myListClear" class="reset-btn danger">전체 삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
