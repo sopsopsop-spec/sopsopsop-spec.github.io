@@ -1,20 +1,33 @@
+/* ==========================================================================
+   색상 변수 (CSS Custom Properties)
+   - 기본값은 라이트 모드 기준
+   - 다크 모드는 시스템 설정(prefers-color-scheme)과 수동 토글(data-theme)
+     두 가지 방식 모두 지원
+   ========================================================================== */
 :root {
+  /* 기본 배경/표면/테두리/텍스트 */
   --bg: #f5f6f8;
   --surface: #ffffff;
   --border: #e2e4e9;
   --text: #1a1c22;
   --text-muted: #6b7280;
+
+  /* 강조 색상 (버튼, 링크, 포커스 등) */
   --accent: #3454d1;
   --accent-soft: #eaefff;
+
+  /* 상태 태그 색상 (인정/조건부/불가 등) */
   --tag-ok: #1a7f4e;
   --tag-ok-bg: #e6f6ee;
   --tag-warn: #b45309;
   --tag-warn-bg: #fef3e2;
   --tag-bad: #b91c1c;
   --tag-bad-bg: #fdecec;
+
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.06);
 }
 
+/* 시스템이 다크 모드일 때 자동으로 적용되는 색상 */
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #14161a;
@@ -34,6 +47,7 @@
   }
 }
 
+/* 사용자가 수동으로 다크 모드를 선택했을 때 (data-theme="dark") */
 :root[data-theme="dark"] {
   --bg: #14161a;
   --surface: #1d2025;
@@ -51,6 +65,7 @@
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
+/* 사용자가 수동으로 라이트 모드를 선택했을 때 (data-theme="light") */
 :root[data-theme="light"] {
   --bg: #f5f6f8;
   --surface: #ffffff;
@@ -68,16 +83,127 @@
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.06);
 }
 
+/* ==========================================================================
+   기본 리셋 & 전역 스타일
+   ========================================================================== */
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Pretendard", "Malgun Gothic", sans-serif;
-  background: var(--bg);
+  background: transparent;
   color: var(--text);
   overflow-x: hidden;
 }
 
+/* ==========================================================================
+   배경 별밤 하늘 (.night-bg)
+   - 페이지 전체 뒤에 고정되는 장식용 배경 (라이트/다크 모드와 무관하게 항상 밤하늘)
+   ========================================================================== */
+.night-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 0%, #10163a 0%, #060915 55%, #010103 100%);
+}
+
+.moon {
+  position: absolute;
+  top: 8%;
+  right: 12%;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fffdf0 0%, #f4edc9 45%, #cfc596 100%);
+  box-shadow: 0 0 50px 16px rgba(255, 250, 220, 0.28), 0 0 120px 60px rgba(255, 250, 220, 0.12);
+}
+
+.stars {
+  position: absolute;
+  inset: -10% -10% -10% -10%;
+  background-repeat: repeat;
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+
+.stars-small {
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 90px 120px, #fff, transparent),
+    radial-gradient(1px 1px at 150px 60px, #fff, transparent),
+    radial-gradient(1px 1px at 220px 180px, #fff, transparent),
+    radial-gradient(1px 1px at 10px 200px, #fff, transparent),
+    radial-gradient(1px 1px at 190px 20px, #fff, transparent);
+  background-size: 240px 240px;
+  opacity: 0.7;
+}
+
+.stars-medium {
+  background-image:
+    radial-gradient(1.5px 1.5px at 50px 80px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 160px 40px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 200px 150px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 30px 160px, #fff, transparent);
+  background-size: 300px 300px;
+  opacity: 0.55;
+  animation-duration: 6s;
+  animation-direction: alternate-reverse;
+}
+
+.stars-large {
+  background-image:
+    radial-gradient(2px 2px at 100px 50px, #fff, transparent),
+    radial-gradient(2px 2px at 250px 200px, #fff, transparent),
+    radial-gradient(2px 2px at 60px 260px, #fff, transparent);
+  background-size: 350px 350px;
+  opacity: 0.85;
+  animation-duration: 5s;
+}
+
+@keyframes twinkle {
+  0% { opacity: 0.25; }
+  50% { opacity: 1; }
+  100% { opacity: 0.35; }
+}
+
+.shooting-star {
+  position: absolute;
+  top: 15%;
+  left: 75%;
+  width: 2px;
+  height: 2px;
+  background: linear-gradient(-45deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+  border-radius: 999px;
+  filter: drop-shadow(0 0 6px #fff);
+  opacity: 0;
+  animation: shoot 8s linear infinite;
+  animation-delay: 2s;
+}
+
+.shooting-star-2 {
+  top: 42%;
+  left: 25%;
+  animation-duration: 10.5s;
+  animation-delay: 5.5s;
+}
+
+@keyframes shoot {
+  0% { transform: translate(0, 0); opacity: 0; width: 2px; }
+  2% { opacity: 1; width: 90px; }
+  8% { transform: translate(-340px, 340px); opacity: 0; width: 2px; }
+  100% { transform: translate(-340px, 340px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stars,
+  .shooting-star {
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   상단 헤더 (.topbar) — 제목, 부제목, 내 리스트 버튼
+   ========================================================================== */
 .topbar {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -140,6 +266,9 @@ body {
   padding: 0 6px;
 }
 
+/* ==========================================================================
+   3D 지구본 영역 (.globe-hero, .globe-container)
+   ========================================================================== */
 .globe-hero {
   max-width: 1280px;
   margin: 24px auto 0;
@@ -152,11 +281,6 @@ body {
   height: 62vh;
   min-height: 420px;
   max-height: 640px;
-  border-radius: 16px;
-  overflow: hidden;
-  background: radial-gradient(circle at 50% 40%, #10131c 0%, #05060a 75%);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
   cursor: grab;
 }
 
@@ -207,6 +331,9 @@ body {
   }
 }
 
+/* ==========================================================================
+   본문 레이아웃 (.layout) — 좌측 필터 + 우측 결과 그리드
+   ========================================================================== */
 .layout {
   display: grid;
   grid-template-columns: 260px 1fr;
@@ -299,6 +426,9 @@ body {
   padding-top: 12px;
 }
 
+/* ==========================================================================
+   대학 카드 목록 (.card-grid, .card)
+   ========================================================================== */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -410,6 +540,9 @@ body {
   font-size: 0.95rem;
 }
 
+/* ==========================================================================
+   대학 상세 정보 모달 (.modal-overlay, .modal)
+   ========================================================================== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -499,6 +632,9 @@ body {
   overflow-y: auto;
 }
 
+/* ==========================================================================
+   내 리스트 모달 (.mylist-modal) — 드래그로 순서 변경 가능한 지원 목록
+   ========================================================================== */
 .mylist-modal {
   max-width: 560px;
 }

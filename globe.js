@@ -16,6 +16,7 @@
   const EARTH_DAY_TEXTURE_URL = 'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg';
   const COUNTRY_BORDERS_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson';
   const RADIUS = 5;
+  const MARKER_BASE_SCALE = 0.3;
 
   let colorized = false;
   let isAnimatingCamera = false;
@@ -30,8 +31,9 @@
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
   camera.position.set(0, 1.2, 13);
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
   renderer.outputEncoding = THREE.sRGBEncoding;
 
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -91,7 +93,7 @@
     );
   }
 
-  function makeMarkerTexture() {
+  function makeMarkerTexture(rgb) {
     const size = 64;
     const c = document.createElement('canvas');
     c.width = c.height = size;
@@ -99,9 +101,10 @@
     const cx = size / 2;
     const cy = size / 2;
     const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size / 2);
-    grad.addColorStop(0, 'rgba(255,255,255,1)');
-    grad.addColorStop(0.22, 'rgba(255,64,168,1)');
-    grad.addColorStop(1, 'rgba(255,64,168,0)');
+    grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(0.16, `rgba(${rgb},1)`);
+    grad.addColorStop(0.38, `rgba(${rgb},0.35)`);
+    grad.addColorStop(0.55, `rgba(${rgb},0)`);
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
@@ -109,7 +112,9 @@
     return new THREE.CanvasTexture(c);
   }
 
-  const markerTexture = makeMarkerTexture();
+  const markerTexture = makeMarkerTexture('255,59,48');
+  const markerTextureHover = makeMarkerTexture('52,199,89');
+  let hoveredSprite = null;
 
   function buildMarkers() {
     const groups = new Map();
@@ -143,7 +148,7 @@
         const material = new THREE.SpriteMaterial({ map: markerTexture, transparent: true, depthTest: true });
         const sprite = new THREE.Sprite(material);
         sprite.position.copy(pos);
-        sprite.scale.set(0.5, 0.5, 1);
+        sprite.scale.set(MARKER_BASE_SCALE, MARKER_BASE_SCALE, 1);
         sprite.userData = { idx };
         earthGroup.add(sprite);
         markers.push(sprite);
@@ -314,17 +319,16 @@
     }
   }
 
-  // --- camera zoom to marker ---
-  function zoomToMarker(sprite) {
+  // --- camera fly-to-marker (shared by click and hover) ---
+  function flyToMarker(sprite, { openDetail = false, distanceScale = 1.55, duration = 1100 } = {}) {
     const targetDir = sprite.position.clone().normalize();
-    const targetCamPos = targetDir.multiplyScalar(RADIUS * 1.55);
+    const targetCamPos = targetDir.multiplyScalar(RADIUS * distanceScale);
     const startCamPos = camera.position.clone();
     const startTarget = controls.target.clone();
     const endTarget = new THREE.Vector3(0, 0, 0);
 
     isAnimatingCamera = true;
     const start = performance.now();
-    const duration = 1100;
 
     function step(now) {
       if (!isAnimatingCamera) return;
@@ -336,12 +340,42 @@
         requestAnimationFrame(step);
       } else {
         isAnimatingCamera = false;
-        const idx = sprite.userData.idx;
-        if (window.openUniversityDetail) window.openUniversityDetail(idx);
+        if (openDetail) {
+          const idx = sprite.userData.idx;
+          if (window.openUniversityDetail) window.openUniversityDetail(idx);
+        }
       }
     }
     requestAnimationFrame(step);
   }
+
+  function zoomToMarker(sprite) {
+    flyToMarker(sprite, { openDetail: true, distanceScale: 1.55, duration: 1100 });
+  }
+
+  // --- hover from the university card list: turn the globe to reveal the pin ---
+  window.focusUniversityOnGlobe = function (idx) {
+    if (!grayMesh) return;
+    const sprite = markers.find((m) => m.userData.idx === idx);
+    if (!sprite) return;
+
+    if (hoveredSprite && hoveredSprite !== sprite) {
+      hoveredSprite.material.map = markerTexture;
+      hoveredSprite.material.needsUpdate = true;
+    }
+    sprite.material.map = markerTextureHover;
+    sprite.material.needsUpdate = true;
+    hoveredSprite = sprite;
+
+    flyToMarker(sprite, { openDetail: false, distanceScale: 1.3, duration: 1100 });
+  };
+
+  window.unfocusUniversityOnGlobe = function () {
+    if (!hoveredSprite) return;
+    hoveredSprite.material.map = markerTexture;
+    hoveredSprite.material.needsUpdate = true;
+    hoveredSprite = null;
+  };
 
   // --- pointer interaction (click vs. drag) ---
   const raycaster = new THREE.Raycaster();
@@ -408,7 +442,7 @@
     const scale = THREE.MathUtils.lerp(0.35, 1, t);
     const opacity = THREE.MathUtils.lerp(0.35, 1, t);
     markers.forEach((m) => {
-      m.scale.set(0.5 * scale, 0.5 * scale, 1);
+      m.scale.set(MARKER_BASE_SCALE * scale, MARKER_BASE_SCALE * scale, 1);
       m.material.opacity = opacity;
     });
 

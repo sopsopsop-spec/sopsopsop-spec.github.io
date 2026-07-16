@@ -238,6 +238,33 @@
     if (card) openModal(card.dataset.idx);
   });
 
+  let lastHoverIdx = null;
+  els.cardGrid.addEventListener('mouseover', (e) => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const idx = Number(card.dataset.idx);
+    if (idx === lastHoverIdx) return;
+    lastHoverIdx = idx;
+    if (window.focusUniversityOnGlobe) window.focusUniversityOnGlobe(idx);
+  });
+  els.cardGrid.addEventListener('mouseleave', () => {
+    lastHoverIdx = null;
+    if (window.unfocusUniversityOnGlobe) window.unfocusUniversityOnGlobe();
+  });
+  els.cardGrid.addEventListener('focusin', (e) => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const idx = Number(card.dataset.idx);
+    if (idx === lastHoverIdx) return;
+    lastHoverIdx = idx;
+    if (window.focusUniversityOnGlobe) window.focusUniversityOnGlobe(idx);
+  });
+  els.cardGrid.addEventListener('focusout', (e) => {
+    if (e.relatedTarget && els.cardGrid.contains(e.relatedTarget)) return;
+    lastHoverIdx = null;
+    if (window.unfocusUniversityOnGlobe) window.unfocusUniversityOnGlobe();
+  });
+
   els.cardGrid.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     if (e.target.closest('.fav-btn')) return;
