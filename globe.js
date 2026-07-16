@@ -320,6 +320,13 @@
   }
 
   // --- camera fly-to-marker (shared by click and hover) ---
+  // Each call gets its own token, so a newer flight always supersedes an
+  // older one instead of both fighting over camera.position every frame
+  // (that fight was producing a resting camera pose — and detail popup —
+  // for neither of the two intended destinations).
+  let flightToken = 0;
+  let detailFlightActive = false;
+
   function flyToMarker(sprite, { openDetail = false, distanceScale = 1.55, duration = 1100 } = {}) {
     const targetDir = sprite.position.clone().normalize();
     const targetCamPos = targetDir.multiplyScalar(RADIUS * distanceScale);
@@ -327,11 +334,13 @@
     const startTarget = controls.target.clone();
     const endTarget = new THREE.Vector3(0, 0, 0);
 
+    const myToken = ++flightToken;
     isAnimatingCamera = true;
+    if (openDetail) detailFlightActive = true;
     const start = performance.now();
 
     function step(now) {
-      if (!isAnimatingCamera) return;
+      if (myToken !== flightToken) return; // superseded by a newer flight
       const t = Math.min((now - start) / duration, 1);
       const eased = easeInOutQuad(t);
       camera.position.lerpVectors(startCamPos, targetCamPos, eased);
@@ -341,6 +350,7 @@
       } else {
         isAnimatingCamera = false;
         if (openDetail) {
+          detailFlightActive = false;
           const idx = sprite.userData.idx;
           if (window.openUniversityDetail) window.openUniversityDetail(idx);
         }
@@ -356,6 +366,7 @@
   // --- hover from the university card list: turn the globe to reveal the pin ---
   window.focusUniversityOnGlobe = function (idx) {
     if (!grayMesh) return;
+    if (detailFlightActive) return; // don't let a hover preview hijack a committed click-to-detail flight
     const sprite = markers.find((m) => m.userData.idx === idx);
     if (!sprite) return;
 
@@ -390,7 +401,14 @@
   }
 
   canvas.addEventListener('pointerdown', (e) => {
-    if (isAnimatingCamera) isAnimatingCamera = false;
+    // Don't cancel a flight that's already committed to opening a detail
+    // panel — otherwise a stray click while the camera is still moving
+    // toward the selected marker can re-raycast against a half-moved
+    // camera and pick up a different marker underneath the cursor.
+    if (isAnimatingCamera && !detailFlightActive) {
+      isAnimatingCamera = false;
+      flightToken++;
+    }
     downX = e.clientX;
     downY = e.clientY;
   });
@@ -412,6 +430,10 @@
 
   function handleClick(e) {
     if (!grayMesh) return;
+    // A marker click already in flight owns the camera until it lands and
+    // opens its detail panel — ignore further clicks so they can't
+    // re-raycast against a camera that's mid-flight toward a different spot.
+    if (detailFlightActive) return;
     updatePointer(e);
     raycaster.setFromCamera(pointer, camera);
 
